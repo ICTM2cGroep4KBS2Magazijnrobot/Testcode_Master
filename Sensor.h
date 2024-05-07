@@ -16,8 +16,12 @@ class Sensor {
         Sensor(int Tilt);
         void read();
         bool detectTilt();
+        
     private:
         int _Tilt;
+        bool state = LOW;
+        bool previousState = LOW;
+        Button button = Button(_Tilt);
         
 };
 
@@ -25,23 +29,34 @@ class Sensor {
 
 Sensor::Sensor(int Tilt) {
     _Tilt = Tilt;
-    pinMode(_Tilt, INPUT);
+    pinMode(_Tilt, INPUT_PULLUP);
+    button = Button(_Tilt);
 };
 
 void Sensor::read() 
 {
     int detectTilt = digitalRead(_Tilt);
     Serial.print("Sensor Tilt: ");
-    Serial.print(detectTilt);
+    Serial.println(detectTilt);
 };
 
-bool Sensor::detectTilt() {
-    int detectTilt = digitalRead(_Tilt);
-    if (detectTilt == HIGH) {
-        return true;
-    }
-    else {
+bool Sensor::detectTilt()
+{
+    
+    state = button.getState();
+
+    switch (state)
+    {
+    case LOW:
         return false;
+        break;
+    case HIGH:
+        return true;
+        break;
+    
+    default:
+        return false;
+        break;
     }
 };
 

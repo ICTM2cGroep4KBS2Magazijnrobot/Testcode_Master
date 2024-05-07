@@ -16,6 +16,7 @@ class MotorControl {
         MotorControl(int Dir, int PWM, int Brake, int Tilt, int EncodeA, int EncodeB);
         void move(int richting, int snelheid);
         void read();
+        void Sensorread();
         void stop();
     private:
         int _Dir;
@@ -55,6 +56,11 @@ void MotorControl::read()
     Serial.print(_PWM);
     Serial.print(", Motor Brake: ");
     Serial.println(_Brake);
+};
+
+void MotorControl::Sensorread()
+{
+    _sensor.read();
 };
 
 void MotorControl::move(int richting, int snelheid)

@@ -15,7 +15,7 @@ class Button {
     bool state;
     bool lastReading;
     unsigned long lastDebounceTime = 0;
-    unsigned long debounceDelay = 100;
+    unsigned long debounceDelay = 0;
   public:
     Button(int pin);
     void init();
