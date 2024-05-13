@@ -32,7 +32,7 @@ class Button {
     }
 
     void Button::init() {
-      pinMode(_pin, INPUT);
+      pinMode(_pin, INPUT_PULLUP);
 
       update();
     }
