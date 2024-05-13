@@ -2,19 +2,18 @@
 #include <Arduino.h>
 #include <Wire.h>
 #include "Joystick.h"
+//#include "Pruduct.h"
+
 
 // Define the analog pin numbers for the joystick
-Joystick joystick(A2, A3, 7);
+Joystick joystick(A2, A3, 7, motorA);
 
 //define the button pin
 Button button(A4);
 
-<<<<<<< HEAD
 // Define the motor pins
 MotorControl motorA(12, 3, 9, 10, 7, 6);
 
-=======
->>>>>>> 1406f7d (Added JSerialComm connection possibilities)
 // Define the state of the button
 bool state = LOW;
 bool previousState = LOW;
@@ -40,11 +39,13 @@ void loop()
     // Check if the button is pressed
     if (state == HIGH && previousState == LOW) {
         // Print a message
+        Serial.print(": Button pressed ");
         werken = !werken;
         Connection();
     }
     // Update the previous state
     previousState = state;
+
 
     // Set manual move on or off
     if (werken == false) {
@@ -60,31 +61,50 @@ void Connection()
     // Send the data to the Slave
     if (werken == false)
     {
-        Wire.beginTransmission(0x08);
+    Wire.beginTransmission(0x08);
         Wire.write(0xa1);
         Wire.endTransmission();
     }
     else if (werken == true)
     {
-        Wire.beginTransmission(0x08);
+     Wire.beginTransmission(0x08);
         Wire.write(0x02);
         Wire.endTransmission();
     }
 }
 
-void JSerialComm(){
+void JSCReceive(){
+    //receive a signal from the Jserialcomm protocol from JAVA
 
     if (Serial.available() > 0) {    
-    byte incomingByte = 0;
-    incomingByte = Serial.read(); // read the incoming byte:
-    if (incomingByte != -1) {
-        if (incomingByte == 0xa1) {
+    int incomingInt = 0;
+    incomingInt = Serial.read(); // read the incoming byte:
+    if (incomingInt != -1) {
+        if (incomingInt == 0xa1) {
+            werken = false;
+    
+     }
+        else if (incomingInt == 0x02) {
             werken = true;
         }
-        else if (incomingByte == 0x02) {
-            werken = false;
-        }
+        Connection();
     }
+    }
+}
+
+    void JSCSend(){
+    //send a signal from the Jserialcomm protocol from JAVA
+    if (werken == false)
+    {
+        Serial.write("Handmatig");
+    }
+    else if (werken == true)
+    {
+        Serial.write("Automatish");
+
+
+
+
     }
 
 
