@@ -48,11 +48,6 @@ void loop()
     // Update the previous state
     previousState = state;
     //Serial.println(werken);
-
-   
-    // doos[0].read();
-    // doos[1].read();
-    // doos[2].read();
    
     // Set manual move on or off
     if (werken == false) {
