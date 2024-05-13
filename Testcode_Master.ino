@@ -11,8 +11,8 @@ Joystick joystick(A2, A3, 7);
 //define the button pin
 Button button(A4);
 
-// int Cords[6] = {1,1,2,2,9,9};
-// Pruduct doos[3] = {Pruduct(Cords[0], Cords[1]), Pruduct(Cords[2], Cords[3]), Pruduct(Cords[4], Cords[5])};
+// Define the motor pins
+MotorControl motorA(12, 3, 9, 10, 7, 6);
 
 // Define the state of the button
 bool state = LOW;
@@ -35,8 +35,6 @@ void setup() {
 void loop()
 {   
     // Get the state of the button
-    // Serial.print(button.getState());
-    // Serial.print(" : ");
     state = button.getState();
     // Check if the button is pressed
     if (state == HIGH && previousState == LOW) {
@@ -47,13 +45,7 @@ void loop()
     }
     // Update the previous state
     previousState = state;
-    //Serial.println(werken);
 
-   
-    // doos[0].read();
-    // doos[1].read();
-    // doos[2].read();
-   
     // Set manual move on or off
     if (werken == false) {
         joystick.manualMove(LOW);
