@@ -2,8 +2,6 @@
 #include <Arduino.h>
 #include <Wire.h>
 #include "Joystick.h"
-//#include "Pruduct.h"
-
 
 // Define the analog pin numbers for the joystick
 Joystick joystick(A2, A3, 7);
@@ -11,9 +9,12 @@ Joystick joystick(A2, A3, 7);
 //define the button pin
 Button button(A4);
 
+<<<<<<< HEAD
 // Define the motor pins
 MotorControl motorA(12, 3, 9, 10, 7, 6);
 
+=======
+>>>>>>> 1406f7d (Added JSerialComm connection possibilities)
 // Define the state of the button
 bool state = LOW;
 bool previousState = LOW;
@@ -39,7 +40,6 @@ void loop()
     // Check if the button is pressed
     if (state == HIGH && previousState == LOW) {
         // Print a message
-        Serial.print(": Button pressed ");
         werken = !werken;
         Connection();
     }
@@ -60,17 +60,37 @@ void Connection()
     // Send the data to the Slave
     if (werken == false)
     {
-        Serial.print(": Sending 1");
         Wire.beginTransmission(0x08);
         Wire.write(0xa1);
         Wire.endTransmission();
     }
     else if (werken == true)
     {
-        Serial.print(": Sending 2");
         Wire.beginTransmission(0x08);
         Wire.write(0x02);
         Wire.endTransmission();
     }
+}
+
+void JSerialComm(){
+
+    if (Serial.available() > 0) {    
+    byte incomingByte = 0;
+    incomingByte = Serial.read(); // read the incoming byte:
+    if (incomingByte != -1) {
+        if (incomingByte == 0xa1) {
+            werken = true;
+        }
+        else if (incomingByte == 0x02) {
+            werken = false;
+        }
+    }
+    }
+
+
+
+
+
+
 }
 
