@@ -73,11 +73,12 @@ void JSerialComm(){
     incomingByte = Serial.read(); // read the incoming byte:
     if (incomingByte != -1) {
         if (incomingByte == 0xa1) {
-            werken = true;
-        }
-        else if (incomingByte == 0x02) {
             werken = false;
         }
+        else if (incomingByte == 0x02) {
+            werken = true;
+        }
+        Connection();
     }
     }
 
