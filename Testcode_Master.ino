@@ -8,6 +8,13 @@
 int redPin = 4;
 int greenPin = 5;
 
+int lastClkState = HIGH;
+int counter = 0;
+
+
+const int CLK_PIN = 2;
+const int DT_PIN = 7;
+
 // Define the analog pin numbers for the joystick
 Joystick joystick(A2, A3, 7);
 
@@ -40,6 +47,8 @@ bool green = false;
 
 // Setup function
 void setup() {
+  attachInterrupt(digitalPinToInterrupt(CLK_PIN), handleEncoder, CHANGE);
+
     //initialize the I2C communication as master
     Wire.begin();
     // Initialize serial communication
@@ -59,6 +68,7 @@ void setColor(int redValue, int greenValue, int blueValue)
 
 void loop()
 {   
+
     // motorA.read();
     // Get the state of the button
     // Serial.print(button.getState());
@@ -182,4 +192,22 @@ void Connection()
         Wire.endTransmission();
     }
 }
+
+void handleEncoder() {
+  int clkState = digitalRead(CLK_PIN);
+  int dtState = digitalRead(DT_PIN);
+
+  if (clkState != lastClkState) {
+    if (dtState != clkState) {
+      counter++;
+    } else {
+      counter--;
+    }
+  }
+  lastClkState = clkState;
+  Serial.println(counter);
+
+}
+
+
 
