@@ -77,14 +77,10 @@ void JSCReceive(){
     //receive a signal from the Jserialcomm protocol from JAVA
 
     if (Serial.available() > 0) {    
-    int incomingInt = 0;
-    incomingInt = Serial.read(); // read the incoming byte:
-    if (incomingInt != -1) {
-        if (incomingInt == 0xa1) {
-            werken = false;
-    
-     }
-        else if (incomingInt == 0x02) {
+        byte incomingByte = 0;
+    incomingByte = Serial.read(); // read the incoming byte:
+    if (incomingByte != -1) {
+        if (incomingByte == 0xa1) {
             werken = true;
         }
         Connection();
