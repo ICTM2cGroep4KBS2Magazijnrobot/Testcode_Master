@@ -3,7 +3,7 @@
 #ifndef AutoMode_h
 #define AutoMode_h
 #include <Arduino.h>
-
+#include "MotorControl.h"
 
 
 //class AutoMode
@@ -18,8 +18,6 @@ class AutoMode {
         int _xValue;
         int _yValue;
         int _state;
-        
-
 };
 
 //constructor
@@ -41,6 +39,7 @@ void AutoMode::read()
 
 void AutoMode::autoMove()
 {
+    Serial.println("AutoMode");
 
 
   

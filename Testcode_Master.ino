@@ -3,6 +3,7 @@
 #include <Wire.h>
 #include "Joystick.h"
 #include "MotorControl.h"
+#include "AutoMode.h"
 //#include "Pruduct.h"
 
 // Define the pins for the RGB LED
@@ -21,7 +22,8 @@ const int DT_PIN = 7;
 
 MotorControl motorA(12, 3, 6,2,7); //vervang 0 door de juiste pin
 
-Joystick joystick(A2, A3, 7, motorA);
+Joystick joystick(A2, A3, 0, motorA);
+AutoMode automode(motorA);
 
 //define the button pin
 Button button(A4);
@@ -153,19 +155,23 @@ void loop()
     //Serial.println(werken);
    
     // Set manual move on or off
-    if (werkenPressed == true || noodstopPressed == false) { // LOW is dat ie wel mag bewegen
+    if (werkenPressed == true && noodstopPressed == false) { // LOW is dat ie wel mag bewegen
         joystick.manualMove(LOW);
     }
     if (werkenPressed == false)
     {
-        // joystick.manualMove(HIGH);
         motorA.stop();
     }
     if (noodstopPressed == HIGH)
     {
-        // joystick.manualMove(HIGH);
         motorA.stop();
-    }    
+    } 
+    if (modusState == false && green == false && noodstopPressed == false)
+    {
+        joystick.manualMove(HIGH);
+        automode.autoMove();
+    }
+       
 }
 void Connection()
 {
