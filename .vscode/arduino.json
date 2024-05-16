@@ -1,5 +1,5 @@
 {
     "board": "arduino:avr:uno",
     "sketch": "Testcode_Master.ino",
-    "port": "/dev/tty.usbmodem14422401"
+    "port": "COM3"
 }

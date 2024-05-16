@@ -7,8 +7,6 @@
 #include <Arduino.h>
 #include "MotorControl.h"
 
-
-
 //class Joystick
 
 class Joystick {
