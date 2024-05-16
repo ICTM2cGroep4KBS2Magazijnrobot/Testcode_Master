@@ -14,17 +14,17 @@
 
 class MotorControl {
     public:
-        MotorControl(int Dir, int PWM, int Brake, int Tilt, int EncodeA, int EncodeB);
+        MotorControl(int Dir, int PWM, int Tilt, int EncodeA, int EncodeB);
         void move(int richting, int snelheid);
         void read();
         void Sensorread();
         void stop();
         void connection_Tilt();
+        void readData(int richting, int snelheid);
 
     private:
         int _Dir;
         int _PWM;
-        int _Brake;
         int _Tilt;
         int _EncodeA;
         int _EncodeB;
@@ -34,17 +34,15 @@ class MotorControl {
 
 //constructor
 
-MotorControl::MotorControl(int Dir, int PWM, int Brake, int Tilt, int EncodeA, int EncodeB) {
+MotorControl::MotorControl(int Dir, int PWM, int Tilt, int EncodeA, int EncodeB) {
     _Dir = Dir;
     _PWM = PWM;
-    _Brake = Brake;
     _Tilt = Tilt;
     _EncodeA = EncodeA;
     _EncodeB = EncodeB;
     _sensor = Sensor(_Tilt);
     pinMode(_Dir, OUTPUT);
     pinMode(_PWM, OUTPUT);
-    pinMode(_Brake, OUTPUT);
 };
 
 
@@ -56,9 +54,15 @@ void MotorControl::read()
     Serial.print("Motor Direction: ");
     Serial.print(_Dir);
     Serial.print(", Motor PWM: ");
-    Serial.print(_PWM);
-    Serial.print(", Motor Brake: ");
-    Serial.println(_Brake);
+    Serial.println(_PWM);
+};
+
+void MotorControl::readData(int richting, int snelheid) 
+{
+    // Serial.print("Motor Direction: ");
+    // Serial.print(richting);
+    // Serial.print(", Motor PWM: ");
+    // Serial.println(snelheid);
 };
 
 void MotorControl::Sensorread()
@@ -68,10 +72,11 @@ void MotorControl::Sensorread()
 
 void MotorControl::move(int richting, int snelheid)
 {
+readData(richting, snelheid);
+
     if(richting == 0){
         //move motor to the left
        if (_sensor.detectTilt()){
-            digitalWrite(_Brake, LOW);
             analogWrite(_PWM, snelheid);
             digitalWrite(_Dir, LOW);
        } else {
@@ -81,7 +86,6 @@ void MotorControl::move(int richting, int snelheid)
     }else if (richting == 1){
         //move motor to the right
         if (_sensor.detectTilt() || !_sensor.detectTilt()){
-            digitalWrite(_Brake, LOW);
             analogWrite(_PWM, snelheid);
             digitalWrite(_Dir, HIGH);
         } else {
@@ -95,7 +99,6 @@ void MotorControl::move(int richting, int snelheid)
 
 void MotorControl::stop()
 {
-    digitalWrite(_Brake, HIGH);
     analogWrite(_PWM, 0);
 };
 

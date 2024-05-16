@@ -8,6 +8,7 @@
 #include "MotorControl.h"
 
 
+    MotorControl motorA(12, 3, 10, 7, 6); //vervang 0 door de juiste pin
 
 //class Joystick
 
