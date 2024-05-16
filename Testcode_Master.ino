@@ -83,8 +83,16 @@ void loop()
         werken = !werken;
         werkenPressed = !werkenPressed;
         Connection();
-        setColor(0,0,0);
+        // setColor(0,0,0);
         // werkenPressed = !werkenPressed;
+        if (green == true && werkenPressed == true) {
+            setColor(0,255,0);
+        }if (green == false && werkenPressed == true) {
+            setColor(235,129,0);
+        }if (werkenPressed == false) {
+            setColor(0,0,0);
+        }
+
         if (werkenPressed == true)
         {
             Serial.print(": SYSTEEM AAN");
