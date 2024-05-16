@@ -8,16 +8,16 @@
 #include "MotorControl.h"
 
 
-    MotorControl motorA(12, 3, 9, 10, 7, 6); //vervang 0 door de juiste pin
 
 //class Joystick
 
 class Joystick {
     public:
-        Joystick(int xPin, int yPin, int pressPin);
+        Joystick(int xPin, int yPin, int pressPin, MotorControl motorA);
         void manualMove(bool state);
         void read();
     private:
+        MotorControl motorA;
         int _xPin;
         int _yPin;
         int _pressPin;
@@ -30,10 +30,9 @@ class Joystick {
 
 //constructor
 
-Joystick::Joystick(int xPin, int yPin, int pressPin) {
-    _xPin = xPin;
-    _yPin = yPin;
-    _pressPin = pressPin;
+Joystick::Joystick(int xPin, int yPin, int pressPin, MotorControl _motorA) 
+  : motorA(_motorA), _xPin(xPin), _yPin(yPin), _pressPin(pressPin)
+{
     pinMode(_xPin, INPUT);
     pinMode(_yPin, INPUT);
     pinMode(_pressPin, INPUT_PULLUP);
