@@ -2,6 +2,7 @@
 #include <Arduino.h>
 #include <Wire.h>
 #include "Joystick.h"
+#include "MotorControl.h"
 //#include "Pruduct.h"
 
 // Define the pins for the RGB LED
@@ -16,9 +17,11 @@ const int CLK_PIN = 2;
 const int DT_PIN = 7;
 
 // Define the analog pin numbers for the joystick
-Joystick joystick(A2, A3, 7, motorA);
 
-MotorControl motorA(12, 3, 10, 6,2,7); //vervang 0 door de juiste pin
+
+MotorControl motorA(12, 3, 6,2,7); //vervang 0 door de juiste pin
+
+Joystick joystick(A2, A3, 7, motorA);
 
 //define the button pin
 Button button(A4);
@@ -164,55 +167,6 @@ void loop()
         motorA.stop();
     }    
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 void Connection()
 {
     // Send the data to the Slave
