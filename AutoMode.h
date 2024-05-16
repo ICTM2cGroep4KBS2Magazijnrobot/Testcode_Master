@@ -12,12 +12,12 @@ class AutoMode {
     public:
         AutoMode(MotorControl motorA);
         void read();
-        void autoMove();
+        void autoMove(int encoderX, int encoderY);
+        void Setup();
     private:
         MotorControl motorA;
-        int _xValue;
-        int _yValue;
-        int _state;
+        int _encoderY;
+        int _encoderX;
 };
 
 //constructor
@@ -25,8 +25,7 @@ class AutoMode {
 AutoMode::AutoMode(MotorControl _motorA) 
   : motorA(_motorA)
 {
-
-
+    Setup();
 };
 
 //methodes
@@ -34,10 +33,22 @@ AutoMode::AutoMode(MotorControl _motorA)
 void AutoMode::read() 
 {
 
+
+
    
 };
 
-void AutoMode::autoMove()
+void AutoMode ::Setup()
+{
+    
+
+    
+
+
+
+};
+
+void AutoMode::autoMove(int encoderY, int encoderX)
 {
     Serial.println("AutoMode");
 
