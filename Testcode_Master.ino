@@ -16,15 +16,14 @@ const int CLK_PIN = 2;
 const int DT_PIN = 7;
 
 // Define the analog pin numbers for the joystick
-Joystick joystick(A2, A3, 7);
+Joystick joystick(A2, A3, 7, motorA);
+
+MotorControl motorA(12, 3, 10, 6,2,7); //vervang 0 door de juiste pin
 
 //define the button pin
 Button button(A4);
 Button noodstop(8);
 Button modus(9);
-
-// int Cords[6] = {1,1,2,2,9,9};
-// Pruduct doos[3] = {Pruduct(Cords[0], Cords[1]), Pruduct(Cords[2], Cords[3]), Pruduct(Cords[4], Cords[5])};
 
 // Define the state of the button
 bool state = LOW;
@@ -71,8 +70,6 @@ void loop()
 
     // motorA.read();
     // Get the state of the button
-    // Serial.print(button.getState());
-    // Serial.print(" : ");
     state = button.getState();
     state2 = noodstop.getState();
     state3 = modus.getState();
@@ -168,6 +165,54 @@ void loop()
     }    
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 void Connection()
 {
     // Send the data to the Slave
@@ -218,4 +263,35 @@ void handleEncoder() {
 }
 
 
+
+void JSCReceive(){
+    //receive a signal from the Jserialcomm protocol from JAVA
+
+    if (Serial.available() > 0) {    
+        byte incomingByte = 0;
+    incomingByte = Serial.read(); // read the incoming byte:
+    if (incomingByte != -1) {
+        if (incomingByte == 0xa1) {
+            werken = true;
+        }
+        Connection();
+    }
+    }
+}
+
+    void JSCSend(){
+    //send a signal from the Jserialcomm protocol from JAVA
+    if (werken == false)
+    {
+        Serial.write("Handmatig");
+    }
+    else if (werken == true)
+    {
+        Serial.write("Automatish");
+
+
+
+
+    }
+}
 

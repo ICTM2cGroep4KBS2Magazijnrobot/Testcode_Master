@@ -107,14 +107,12 @@ void MotorControl::connection_Tilt()
     // Send the data to the Slave
     if (!_sensor.detectTilt())
     {
-        Serial.print(": Sending 16");
         Wire.beginTransmission(0x08);
         Wire.write(0x10);
         Wire.endTransmission();
     }
     else if (_sensor.detectTilt())
     {
-        Serial.print(": Sending 32");
         Wire.beginTransmission(0x08);
         Wire.write(0x20);
         Wire.endTransmission();
