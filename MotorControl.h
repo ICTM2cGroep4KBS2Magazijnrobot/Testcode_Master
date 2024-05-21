@@ -17,7 +17,7 @@ class MotorControl {
         MotorControl(int Dir, int PWM, int Tilt, int EncodeA, int EncodeB);
         void move(int richting, int snelheid);
         void read();
-        void Sensorread();
+        bool Sensorread();
         void stop();
         void connection_Tilt();
         void readData(int richting, int snelheid);
@@ -65,15 +65,14 @@ void MotorControl::readData(int richting, int snelheid)
     // Serial.println(snelheid);
 };
 
-void MotorControl::Sensorread()
+bool MotorControl::Sensorread()
 {
     _sensor.read();
 };
 
 void MotorControl::move(int richting, int snelheid)
 {
-readData(richting, snelheid);
-
+connection_Tilt();
     if(richting == 0){
         //move motor to the left
        if (_sensor.detectTilt()){

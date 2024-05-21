@@ -50,7 +50,7 @@ void AutoMode ::Setup()
 
 void AutoMode::autoMove(int encoderY, int encoderX)
 {
-    Serial.println("AutoMode");
+    //Serial.println("AutoMode");
 
 
   

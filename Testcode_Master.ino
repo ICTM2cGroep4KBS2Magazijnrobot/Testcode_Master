@@ -146,10 +146,8 @@ void loop()
      motorA.stop();
    } else if((werkenPressed == true && noodstopPressed == false && modusState == true) || werken == true){
     joystick.manualMove(LOW);
-    Serial.println("Handmatig");
    } else if ((modusState == false && noodstopPressed == false) || Auto == true){
     automode.autoMove(incomingEncoderX, counter);
-    Serial.println("Auto");
    } else if (werkenPressed == false || modusState == true){
         motorA.stop();
     }
