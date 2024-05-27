@@ -48,12 +48,17 @@ bool werkenPressed = false;
 bool noodstopPressed = false;
 bool green = false;
 
+int incomingX = 0;
+int incomingY = 4;
+
+bool veranderCoords = true;
+bool changeX = true;
+bool changeY = true;
 
 String receivedString = "";
 String incomingString = "";
 byte incomingByte = 0;
 int incomingEncoderX = 0;
-
 
 enum ButtonState {
     Modus,
@@ -83,6 +88,7 @@ void setup() {
 
 void loop()
 {   
+    geefCoords();
     // Get the state of the button
     state = button.getState();
     state2 = noodstop.getState();
@@ -109,29 +115,29 @@ void loop()
     switch (currentState){
         case Noodstop:
             noodstopPressed = true;
-            Serial.print(": Noodstop pressed");
+//            Serial.print(": Noodstop pressed");
             noodstopState = !noodstopState;
             Connection();
             setColor(255,0,0);
-            Serial.print(": ACTIVATED");
+//            Serial.print(": ACTIVATED");
             break;
         case NoodstopReleased:
             noodstopPressed = false;
-            Serial.print(": Noodstop released");
+//            Serial.print(": Noodstop released");
             noodstopState = !noodstopState;
             Connection();
             setColor(235,129,0);
-            Serial.print(": RELEASED");
+//            Serial.print(": RELEASED");
             break;
         case AanUit:
             werken = !werken;
             werkenPressed = !werkenPressed;
-            Serial.print(": AAN/UIT pressed ");
+//            Serial.print(": AAN/UIT pressed ");
             if (werkenPressed == true)
             {
-                Serial.print(": SYSTEEM AAN");
+//                Serial.print(": SYSTEEM AAN");
             }else{
-                Serial.print(": SYSTEEM UIT");
+//                Serial.print(": SYSTEEM UIT");
             }
             Connection();
             if (green == true && werkenPressed == true) {
@@ -143,7 +149,7 @@ void loop()
             }
             break;
         case Modus:
-            Serial.print(": Modus changed"); 
+//            Serial.print(": Modus changed"); 
             modusState = !modusState;  
             if (green == false) {
                 setColor(0,255,0);
@@ -169,7 +175,7 @@ void loop()
    } else if((werkenPressed == true && noodstopPressed == false && modusState == true) || werken == true){
     joystick.manualMove(LOW);
    } else if ((modusState == false && noodstopPressed == false) || Auto == true){
-    automode.autoMove(incomingEncoderX, counter);
+    automode.autoMove(incomingEncoderX, counter, incomingX, incomingY);
    } else if (werkenPressed == false || modusState == true){
         motorA.stop();
     }
@@ -186,27 +192,27 @@ void Connection()
 {
     // Send the data to the Slave
 if (noodstopPressed == true) {
-    Serial.print(": Sending ACTIVATED");
+//    Serial.print(": Sending ACTIVATED");
     Wire.beginTransmission(0x08);
     Wire.write(0x02);
     Wire.endTransmission();
 } else if (werkenPressed == false) {
-    Serial.print(": Sending UIT");
+//    Serial.print(": Sending UIT");
     Wire.beginTransmission(0x08);
     Wire.write(0x02);
     Wire.endTransmission();
 } else if (modusState == true) {
-    Serial.print(": Sending AAN");
+//    Serial.print(": Sending AAN");
     Wire.beginTransmission(0x08);
     Wire.write(0xa1);
     Wire.endTransmission();
 } else if (modusState == false) {
-    Serial.print(": Sending UIT");
+//    Serial.print(": Sending UIT");
     Wire.beginTransmission(0x08);
     Wire.write(0x02);
     Wire.endTransmission();
 } else if (noodstopPressed == false && werkenPressed == true) {
-    Serial.print(": Sending RELEASED");
+//    Serial.print(": Sending RELEASED");
     Wire.beginTransmission(0x08);
     Wire.write(0xa1);
     Wire.endTransmission();
@@ -217,9 +223,9 @@ void Receive(){
     Wire.requestFrom(0x08, 33);
     if (Wire.available() > 0) {
         char Prefix = Wire.read();
-        Serial.print("Prefix: ");
-        Serial.print(Prefix);
-        Serial.print(" : ");
+//        Serial.print("Prefix: ");
+//        Serial.print(Prefix);
+//        Serial.print(" : ");
         if (Prefix == 'S'){
             //message is string
             receivedString = "";
@@ -227,8 +233,8 @@ void Receive(){
                 char c = Wire.read();
                 receivedString += c;
             }
-            Serial.print("Received string: ");
-            Serial.println(receivedString);
+//            Serial.print("Received string: ");
+//            Serial.println(receivedString);
             
     
         } else if (Prefix == 'I'){
@@ -241,45 +247,70 @@ void Receive(){
         }
     }
    
-    Serial.print(incomingEncoderX);
-    Serial.print(" : ");
-    Serial.print(counter);
-    Serial.print(" : ");
-    Serial.println(receivedString);
+//    Serial.print(incomingEncoderX);
+//    Serial.print(" : ");
+//    Serial.print(counter);
+//    Serial.print(" : ");
+//    Serial.println(receivedString);
     
 }
 
-void JSCReceive(){
-    //receive a signal from the Jserialcomm protocol from JAVA
+//void JSCReceive(){
+//    //receive a signal from the Jserialcomm protocol from JAVA
+//
+//    if (Serial.available() > 0) {    
+//        char c = 0;
+//    c = Serial.read(); // read the incoming byte:
+//    if (c != -1) {
+//        incomingString += c;
+//        if (incomingString == "Handmatig") {
+//            werken = true;
+//            Auto = false;
+//        } else if(incomingString == "Automatish") {
+//            werken = false;
+//            Auto = true;
+//        }
+//        incomingString = ""; // clear the string:
+//        Connection();
+//    }
+//    }
+//}
 
-    if (Serial.available() > 0) {    
-        char c = 0;
-    c = Serial.read(); // read the incoming byte:
-    if (c != -1) {
-        incomingString += c;
-        if (incomingString == "Handmatig") {
-            werken = true;
-            Auto = false;
-        } else if(incomingString == "Automatish") {
-            werken = false;
-            Auto = true;
+//    void JSCSend(){
+//    //send a signal from the Jserialcomm protocol from JAVA
+//    if (werken == true)
+//    {
+//        Serial.write("Handmatig");
+//    }
+//    else if (Auto == true)
+//    {
+//        Serial.write("Automatish");
+//    }
+//}
+
+void geefCoords(){
+  if(veranderCoords){
+    if(Serial.available()> 0){
+      if(changeX){
+        incomingX = Serial.read();
+        changeX = false;
+        changeY = true;
+      }
+      else{
+        if(changeY){
+        incomingY = Serial.read();
+        changeY = false;
+        changeX = true;
+        veranderCoords = false;
         }
-        incomingString = ""; // clear the string:
-        Connection();
+      }
+//     incomingX = Serial.read();
+//     incomingY = Serial.read();
+//     Serial.println("X is: ");
+//     Serial.println(incomingX);
+//     incomingY = Serial.read();
     }
-    }
-}
-
-    void JSCSend(){
-    //send a signal from the Jserialcomm protocol from JAVA
-    if (werken == true)
-    {
-        Serial.write("Handmatig");
-    }
-    else if (Auto == true)
-    {
-        Serial.write("Automatish");
-    }
+  }
 }
 
 void handleEncoder() {

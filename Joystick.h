@@ -45,12 +45,12 @@ void Joystick::read()
     int JoyY = analogRead(_yPin);
     int JoyPress = digitalRead(_pressPin);
 
-    Serial.print("Joystick X: ");
-    Serial.print(JoyX);
-    Serial.print(", Joystick Y: ");
-    Serial.print(JoyY);
-    Serial.print(", Joystick Press: ");
-    Serial.println(JoyPress);
+//    Serial.print("Joystick X: ");
+//    Serial.print(JoyX);
+//    Serial.print(", Joystick Y: ");
+//    Serial.print(JoyY);
+//    Serial.print(", Joystick Press: ");
+//    Serial.println(JoyPress);
 };
 
 void Joystick::manualMove(bool state)
