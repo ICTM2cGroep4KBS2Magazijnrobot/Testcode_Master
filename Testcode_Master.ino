@@ -6,6 +6,7 @@
 #include "AutoMode.h"
 //#include "Pruduct.h"
 
+
 // Define the pins for the RGB LED
 int redPin = 4;
 int greenPin = 5;
@@ -43,6 +44,7 @@ bool werken = true;
 bool Auto = false;
 bool noodstopState = false;
 bool modusState = false;
+boolean sensorY = false; // Voeg deze regel toe aan het begin van je code
 
 bool werkenPressed = false;
 bool noodstopPressed = false;
@@ -72,16 +74,17 @@ enum ButtonState {
 
 // Setup function
 void setup() {
-  attachInterrupt(digitalPinToInterrupt(CLK_PIN), handleEncoder, CHANGE);
+    attachInterrupt(digitalPinToInterrupt(CLK_PIN), handleEncoder, CHANGE);
 
-    //initialize the I2C communication as master
-    Wire.begin();
-    // Initialize serial communication
-    Serial.begin(115200);
+        //initialize the I2C communication as master
+        Wire.begin();
 
-    // Initialize the RGB Pins
-    pinMode(redPin, OUTPUT);
-    pinMode(greenPin, OUTPUT);
+        // Initialize serial communication
+        Serial.begin(115200);
+
+        // Initialize the RGB Pins
+        pinMode(redPin, OUTPUT);
+        pinMode(greenPin, OUTPUT);
 }
 
 
@@ -119,7 +122,9 @@ void loop()
             noodstopState = !noodstopState;
             Connection();
             setColor(255,0,0);
-//            Serial.print(": ACTIVATED");
+            Serial.print(": ACTIVATED");
+            Serial.write('c');
+            Serial.write(3);
             break;
         case NoodstopReleased:
             noodstopPressed = false;
@@ -220,39 +225,32 @@ if (noodstopPressed == true) {
 }
 
 void Receive(){
-    Wire.requestFrom(0x08, 33);
-    if (Wire.available() > 0) {
-        char Prefix = Wire.read();
-//        Serial.print("Prefix: ");
-//        Serial.print(Prefix);
-//        Serial.print(" : ");
-        if (Prefix == 'S'){
-            //message is string
-            receivedString = "";
-            while (Wire.available()) {
-                char c = Wire.read();
-                receivedString += c;
-            }
-//            Serial.print("Received string: ");
-//            Serial.println(receivedString);
-            
+    Wire.requestFrom(0x08, 3);
+    while (Wire.available()) {
+        
+        int regId = Wire.read(); // byte 1
+        int highByte = Wire.read(); // byte 2
+        int lowByte = Wire.read(); // byte 3
+        int data = (highByte << 8) | lowByte; // combine the two bytes to an int
     
-        } else if (Prefix == 'I'){
-            //message is int
-            if (Wire.available() > 0) {
-            byte highByte = Wire.read();
-            byte lowByte = Wire.read();
-            incomingEncoderX = (highByte << 8) | lowByte;
-            }
+        switch (regId) {
+            case 10:
+                incomingEncoderX = data;
+                sensorY = false;
+                // Serial.println(incomingEncoderX);
+                break;
+            case 20:
+                int incomingMessage = data;
+                if (incomingMessage == 0)
+                {
+                    sensorY = true;
+                }
+                break;
+            default:
+                // Serial.println("Unknown regId: " + String(regId));
+                break;
         }
     }
-   
-//    Serial.print(incomingEncoderX);
-//    Serial.print(" : ");
-//    Serial.print(counter);
-//    Serial.print(" : ");
-//    Serial.println(receivedString);
-    
 }
 
 //void JSCReceive(){
@@ -324,7 +322,14 @@ void handleEncoder() {
       counter--;
     }
   }
-  lastClkState = clkState;
-  //Serial.println(counter);
+
+if (sensorY == true)
+  {
+    counter = 0;
+  }
+
+lastClkState = clkState;
+  
+Serial.println(counter);
 
 }
