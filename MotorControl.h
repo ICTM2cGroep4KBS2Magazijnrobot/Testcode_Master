@@ -51,10 +51,10 @@ MotorControl::MotorControl(int Dir, int PWM, int Tilt, int EncodeA, int EncodeB)
 
 void MotorControl::read() 
 {
-    Serial.print("Motor Direction: ");
-    Serial.print(_Dir);
-    Serial.print(", Motor PWM: ");
-    Serial.println(_PWM);
+//    Serial.print("Motor Direction: ");
+//    Serial.print(_Dir);
+//    Serial.print(", Motor PWM: ");
+//    Serial.println(_PWM);
 };
 
 void MotorControl::readData(int richting, int snelheid) 
@@ -122,5 +122,3 @@ void MotorControl::connection_Tilt()
 
 
 #endif
-
-
