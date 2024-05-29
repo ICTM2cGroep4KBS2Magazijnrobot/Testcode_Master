@@ -6,6 +6,8 @@
 #include "MotorControl.h"
 #include <Wire.h>
 
+boolean geprikt = false;
+
 //class AutoMode
 
 class AutoMode {
@@ -204,11 +206,23 @@ void AutoMode::autoMove(int encoderX, int encoderY, int X, int Y){
   }
 
   if((encoderX < intXwaarde + cordoffset && encoderX > intXwaarde - cordoffset) && (encoderY < intYwaarde + cordoffset && encoderY > intYwaarde - cordoffset)){
-      if(verstuurConfirm){
+      if(verstuurConfirm && X != 9 && Y != 9){
         verstuurConfirm = false;
-        Serial.write('b');
-        Serial.write(X);
-        Serial.write(Y);
+        if (geprikt == false && motorA.getDistance() < 16) {
+          motorA.move(0,125);
+          if (motorA.getDistance() > 15) {
+            geprikt = true;
+          }
+        }
+        else if (geprikt == true && motorA.getDistance() == 16) {
+          motorA.move(1,125);
+        }
+        else if (motorA.getDistance() <= 7) {
+          geprikt = false;
+          Serial.write('b');
+          Serial.write(X);
+          Serial.write(Y);
+        }
       }
   }
 
