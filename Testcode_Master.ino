@@ -13,7 +13,7 @@ int greenPin = 5;
 
 int lastClkState = HIGH;
 int counter = 0;
-
+bool sensorX = false;
 
 const int CLK_PIN = 2;
 const int DT_PIN = 7;
@@ -38,17 +38,21 @@ bool state3 = LOW;
 bool previousState = LOW;
 bool previousState2 = LOW;
 bool previousState3 = LOW;
+bool start = true;
 
 // Define the flipflop
 bool werken = true;
 bool Auto = false;
 bool noodstopState = false;
 bool modusState = false;
-boolean sensorY = false; // Voeg deze regel toe aan het begin van je code
+bool sensorY = true; // Voeg deze regel toe aan het begin van je code
 
 bool werkenPressed = false;
 bool noodstopPressed = false;
 bool green = false;
+
+int startupX = 0;
+int startupY = 4;
 
 int incomingX = 0;
 int incomingY = 4;
@@ -56,11 +60,17 @@ int incomingY = 4;
 bool veranderCoords = true;
 bool changeX = true;
 bool changeY = true;
+boolean stap = true;
+bool XofY = true;
 
 String receivedString = "";
 String incomingString = "";
 byte incomingByte = 0;
 int incomingEncoderX = 0;
+
+int beweegCounter = 0;
+int oudeX = 0;
+int oudeY = 0;
 
 enum ButtonState {
     Modus,
@@ -78,20 +88,55 @@ void setup() {
 
         //initialize the I2C communication as master
         Wire.begin();
-
         // Initialize serial communication
         Serial.begin(115200);
 
         // Initialize the RGB Pins
         pinMode(redPin, OUTPUT);
         pinMode(greenPin, OUTPUT);
+//        automode.changeConfirmFalse();
+
 }
 
 
 
 void loop()
 {   
-    geefCoords();
+
+    if(start){
+      Receive();
+
+      if(XofY){
+          Wire.beginTransmission(0x08); //voor y naar beneden
+          Wire.write(0x72);
+          Wire.endTransmission();
+         if(sensorY){
+          Wire.beginTransmission(0x08);
+          Wire.write(0x73);
+          Wire.endTransmission();
+          XofY = false;
+//        start = false;
+         }
+      }else{
+          Wire.beginTransmission(0x08);
+          Wire.write(0x70);
+          Wire.endTransmission();
+        if(sensorX){
+          Wire.beginTransmission(0x08);
+          Wire.write(0x71);
+          Wire.endTransmission();
+//          bool startupcheck = automode.homing(incomingEncoderX, counter, startupX, startupY);
+
+//          if(startupcheck = true){
+            start = false;
+//          }
+//      }
+      }
+
+    }
+    }
+    else{
+     geefCoords();
     // Get the state of the button
     state = button.getState();
     state2 = noodstop.getState();
@@ -118,21 +163,27 @@ void loop()
     switch (currentState){
         case Noodstop:
             noodstopPressed = true;
+            green = !green;
 //            Serial.print(": Noodstop pressed");
             noodstopState = !noodstopState;
             Connection();
             setColor(255,0,0);
-            Serial.print(": ACTIVATED");
+//            Serial.print(": ACTIVATED");
             Serial.write('c');
             Serial.write(3);
+            
             break;
         case NoodstopReleased:
             noodstopPressed = false;
+            modusState = false;
+            green = false;
 //            Serial.print(": Noodstop released");
             noodstopState = !noodstopState;
             Connection();
             setColor(235,129,0);
 //            Serial.print(": RELEASED");
+            Serial.write('c');
+            Serial.write(2);
             break;
         case AanUit:
             werken = !werken;
@@ -147,10 +198,16 @@ void loop()
             Connection();
             if (green == true && werkenPressed == true) {
                 setColor(0,255,0);
+                Serial.write('c');
+                Serial.write(1);
             } else if (green == false && werkenPressed == true) {
                 setColor(235,129,0);
+                Serial.write('c');
+                Serial.write(2);
             }else if (werkenPressed == false) {
                 setColor(0,0,0);
+                Serial.write('c');
+                Serial.write(4);
             }
             break;
         case Modus:
@@ -158,8 +215,12 @@ void loop()
             modusState = !modusState;  
             if (green == false) {
                 setColor(0,255,0);
+                Serial.write('c');
+                Serial.write(1);
             }else{
                 setColor(235,129,0);
+                Serial.write('c');
+                Serial.write(2);
             }
             green = !green;
             Connection();
@@ -175,14 +236,24 @@ void loop()
     previousState3 = state3;
 
     // Set manual move on or off
-   if(noodstopPressed == HIGH){
-     motorA.stop();
+   if(noodstopPressed == HIGH || werkenPressed == false){
+//    Serial.println("Noodstop ingedrukt");
+//    Wire.beginTransmission(0x08);
+//    Wire.write(0xa1);
+//    Wire.endTransmission();
+    Wire.beginTransmission(0x08);
+    Wire.write(0x11);
+    Wire.endTransmission();
+    motorA.stop();
+    joystick.manualMove(HIGH);
    } else if((werkenPressed == true && noodstopPressed == false && modusState == true) || werken == true){
     joystick.manualMove(LOW);
    } else if ((modusState == false && noodstopPressed == false) || Auto == true){
     automode.autoMove(incomingEncoderX, counter, incomingX, incomingY);
    } else if (werkenPressed == false || modusState == true){
         motorA.stop();
+    }
+  
     }
 }
 
@@ -232,76 +303,91 @@ void Receive(){
         int highByte = Wire.read(); // byte 2
         int lowByte = Wire.read(); // byte 3
         int data = (highByte << 8) | lowByte; // combine the two bytes to an int
-    
+        
         switch (regId) {
             case 10:
                 incomingEncoderX = data;
+                
                 sensorY = false;
-                // Serial.println(incomingEncoderX);
+                sensorX = true;
+//                Serial.println(incomingEncoderX);
                 break;
             case 20:
                 int incomingMessage = data;
                 if (incomingMessage == 0)
-                {
+                { 
                     sensorY = true;
+                    sensorX = false;
                 }
                 break;
             default:
                 // Serial.println("Unknown regId: " + String(regId));
+                sensorX = false;
                 break;
         }
+        berekenVerschil(incomingEncoderX, counter);
     }
 }
 
-//void JSCReceive(){
-//    //receive a signal from the Jserialcomm protocol from JAVA
-//
-//    if (Serial.available() > 0) {    
-//        char c = 0;
-//    c = Serial.read(); // read the incoming byte:
-//    if (c != -1) {
-//        incomingString += c;
-//        if (incomingString == "Handmatig") {
-//            werken = true;
-//            Auto = false;
-//        } else if(incomingString == "Automatish") {
-//            werken = false;
-//            Auto = true;
-//        }
-//        incomingString = ""; // clear the string:
-//        Connection();
-//    }
-//    }
-//}
+void berekenVerschil(int nieuweX, int nieuweY){
+  if(oudeX < nieuweX){
+    beweegCounter += (nieuweX - oudeX);
+  }
+  else if(oudeX > nieuweX){
+    beweegCounter += (oudeX - nieuweX);
+  }
+  checkBeweegCounter();
+  
+  if(oudeY < nieuweY){
+    beweegCounter += (nieuweY - oudeY);
+  }
+  else if(oudeY > nieuweY){
+    beweegCounter += (oudeY - nieuweY);
+  }
+  checkBeweegCounter();
+}
 
-//    void JSCSend(){
-//    //send a signal from the Jserialcomm protocol from JAVA
-//    if (werken == true)
-//    {
-//        Serial.write("Handmatig");
-//    }
-//    else if (Auto == true)
-//    {
-//        Serial.write("Automatish");
-//    }
-//}
+void checkBeweegCounter(){
+  int Xmap = map(incomingEncoderX, 0, 5850, 0, 255);
+  int Ymap = map(counter, 0, 5000, 0, 255);
+  if(beweegCounter >= 1000){
+    beweegCounter = 0;
+    Serial.write('a');
+    Serial.write(Xmap);
+    Serial.write(Ymap);
+//    Serial.println("X is: ");
+//    Serial.println(Xmap);
+//    Serial.println("X is: ");
+//    Serial.println(incomingEncoderX);
+  }
+}
 
 void geefCoords(){
   if(veranderCoords){
     if(Serial.available()> 0){
-      if(changeX){
-        incomingX = Serial.read();
-        changeX = false;
-        changeY = true;
+//      if(Serial.read() == 9){
+//        Serial.write('e');
+//        Serial.write(1);
+//      }
+//      else{
+          if(changeX){
+          incomingX = Serial.read();
+          changeX = false;
+          changeY = true;
       }
       else{
-        if(changeY){
-        incomingY = Serial.read();
-        changeY = false;
-        changeX = true;
-        veranderCoords = false;
+          if(changeY){
+          incomingY = Serial.read();
+          changeY = false;
+          changeX = true;
+          automode.changeConfirmTrue();
+//        veranderCoords = false;
         }
       }
+//      }
+    
+      
+   
 //     incomingX = Serial.read();
 //     incomingY = Serial.read();
 //     Serial.println("X is: ");
@@ -310,6 +396,8 @@ void geefCoords(){
     }
   }
 }
+
+
 
 void handleEncoder() {
   int clkState = digitalRead(CLK_PIN);
@@ -330,6 +418,6 @@ if (sensorY == true)
 
 lastClkState = clkState;
   
-Serial.println(counter);
+//Serial.println(counter);
 
 }
