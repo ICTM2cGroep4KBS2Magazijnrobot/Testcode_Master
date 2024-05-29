@@ -204,7 +204,7 @@ void AutoMode::autoMove(int encoderX, int encoderY, int X, int Y){
   }
 
   if((encoderX < intXwaarde + cordoffset && encoderX > intXwaarde - cordoffset) && (encoderY < intYwaarde + cordoffset && encoderY > intYwaarde - cordoffset)){
-      if(verstuurConfirm){
+      if(verstuurConfirm && X !=9 & Y!=9){
         verstuurConfirm = false;
         Serial.write('b');
         Serial.write(X);
