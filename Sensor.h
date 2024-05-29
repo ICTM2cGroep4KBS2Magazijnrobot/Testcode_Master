@@ -36,7 +36,6 @@ Sensor::Sensor(int Tilt) {
 void Sensor::read() 
 {
     int detectTilt = button.getState();
-//    Serial.println(detectTilt);
 };
 
 bool Sensor::detectTilt()
