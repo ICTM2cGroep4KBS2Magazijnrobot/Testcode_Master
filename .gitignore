@@ -30,3 +30,7 @@
 *.exe
 *.out
 *.app
+
+# Ignored files
+*.arduino.json
+*.c_cpp_properties.json
