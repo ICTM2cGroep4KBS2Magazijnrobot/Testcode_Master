@@ -22,7 +22,7 @@ const int DT_PIN = 7;
 MotorControl motorA(12, 3, 6,2,7); //vervang 0 door de juiste pin
 
 // Define the analog pin numbers for the Joystick
-Joystick joystick(A2, A3, 0, motorA);
+Joystick joystick(A2, 0, 0, motorA);
 // Define the analog pin numbers for the AutoMode
 AutoMode automode(motorA);
 
