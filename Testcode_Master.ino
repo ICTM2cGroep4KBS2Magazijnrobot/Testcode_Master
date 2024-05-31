@@ -72,6 +72,8 @@ int beweegCounter = 0;
 int oudeX = 0;
 int oudeY = 0;
 
+
+
 enum ButtonState {
     Modus,
     AanUit,
@@ -136,7 +138,7 @@ void loop()
     }
     }
     else{
-     geefCoords();
+    geefCoords();
     // Get the state of the button
     state = button.getState();
     state2 = noodstop.getState();
@@ -147,6 +149,7 @@ void loop()
 
      // Determine the current state
     ButtonState currentState = Default;
+
     if (state2 == LOW && previousState2 == HIGH && noodstopPressed == false) {
         currentState = Noodstop;
     } else if (state2 == LOW && state3 == LOW && noodstopPressed == true) {
@@ -352,9 +355,11 @@ void checkBeweegCounter(){
   int Ymap = map(counter, 0, 5000, 0, 255);
   if(beweegCounter >= 1000){
     beweegCounter = 0;
-    Serial.write('a');
-    Serial.write(Xmap);
-    Serial.write(Ymap);
+    if (incomingEncoderX < 5800) {
+      Serial.write('a');
+      Serial.write(Xmap);
+      Serial.write(Ymap);
+    }
 //    Serial.println("X is: ");
 //    Serial.println(Xmap);
 //    Serial.println("X is: ");
@@ -366,8 +371,25 @@ void geefCoords(){
   if(veranderCoords){
     if(Serial.available()> 0){
 //      if(Serial.read() == 9){
-//        Serial.write('e');
-//        Serial.write(1);
+//        noodstopPressed = true;
+//        green = !green;
+////            Serial.print(": Noodstop pressed");
+//            noodstopState = !noodstopState;
+//            Connection();
+//            setColor(255,0,0);
+////            Serial.print(": ACTIVATED");
+//            Serial.write('c');
+//            Serial.write(3);
+//      }
+//      else if(Serial.read() == 8){
+//        noodstopPressed = false;
+//            modusState = false;
+//            green = false;
+//            noodstopState = !noodstopState;
+//            Connection();
+//            setColor(235,129,0);
+//            Serial.write('c');
+//            Serial.write(2);
 //      }
 //      else{
           if(changeX){
@@ -381,6 +403,7 @@ void geefCoords(){
           changeY = false;
           changeX = true;
           automode.changeConfirmTrue();
+          automode.setfase();
 //        veranderCoords = false;
         }
       }
