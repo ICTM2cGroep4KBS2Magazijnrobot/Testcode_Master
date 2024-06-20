@@ -5,206 +5,448 @@
 #include "MotorControl.h"
 #include "AutoMode.h"
 //#include "Pruduct.h"
+const unsigned long PING_INTERVAL = 5000; 
+const unsigned long PING_TIMEOUT = 4000;  
 
-// Define the pins for the RGB LED
+    unsigned long lastPingTime;
+    bool waitingForPong;
+    int lastSentPing;
+
 int redPin = 4;
 int greenPin = 5;
 
 int lastClkState = HIGH;
 int counter = 0;
-
+bool sensorX = false;
 
 const int CLK_PIN = 2;
 const int DT_PIN = 7;
 
-// Define the analog pin numbers for the joystick
+MotorControl motorA(12, 3, 6,2,7); 
 
+Joystick joystick(A2, 0, 0, motorA);
 
-MotorControl motorA(12, 3, 6,2,7); //vervang 0 door de juiste pin
-
-Joystick joystick(A2, A3, 0, motorA);
 AutoMode automode(motorA);
 
-//define the button pin
-Button button(A4);
+Button button(10);
 Button noodstop(8);
 Button modus(9);
 
-// Define the state of the button
 bool state = LOW;
 bool state2 = LOW;
 bool state3 = LOW;
 bool previousState = LOW;
 bool previousState2 = LOW;
 bool previousState3 = LOW;
+bool start = true;
 
-// Define the flipflop
 bool werken = true;
+bool Auto = false;
 bool noodstopState = false;
 bool modusState = false;
+bool sensorY = true; // Voeg deze regel toe aan het begin van je code
 
 bool werkenPressed = false;
 bool noodstopPressed = false;
 bool green = false;
 
-// Define the I2C Serial bytes
+int startupX = 0;
+int startupY = 4;
 
-// Setup function
+int incomingX = 0;
+int incomingY = 4;
+
+bool veranderCoords = true;
+bool changeX = true;
+bool changeY = true;
+boolean stap = true;
+bool XofY = true;
+
+String receivedString = "";
+String incomingString = "";
+byte incomingByte = 0;
+int incomingEncoderX = 0;
+
+int beweegCounter = 0;
+int oudeX = 0;
+int oudeY = 0;
+
+
+
+enum ButtonState {
+    Modus,
+    AanUit,
+    Noodstop,
+    NoodstopReleased,
+    Default
+};
+
+
 void setup() {
-  attachInterrupt(digitalPinToInterrupt(CLK_PIN), handleEncoder, CHANGE);
+    attachInterrupt(digitalPinToInterrupt(CLK_PIN), handleEncoder, CHANGE);
 
-    //initialize the I2C communication as master
-    Wire.begin();
-    // Initialize serial communication
-    Serial.begin(115200);
+        //initialize the I2C communication as master
+        Wire.begin();
+    
+        Serial.begin(115200);
+        pinMode(redPin, OUTPUT);
+        pinMode(greenPin, OUTPUT);
+//        automode.changeConfirmFalse();
 
-    // Initialize the RGB Pins
-    pinMode(redPin, OUTPUT);
-    pinMode(greenPin, OUTPUT);
 }
 
-// Function to set the color of the RGB LED
+
+
+void loop()
+{   
+  checkConnection();
+
+    if(start){
+      Receive();
+
+      if(XofY){
+          Wire.beginTransmission(0x08); //voor y naar beneden
+          Wire.write(0x72);
+          Wire.endTransmission();
+         if(sensorY){
+          Wire.beginTransmission(0x08);
+          Wire.write(0x73);
+          Wire.endTransmission();
+          XofY = false;
+//        start = false;
+         }
+      }else{
+          Wire.beginTransmission(0x08);
+          Wire.write(0x70);
+          Wire.endTransmission();
+        if(sensorX){
+          Wire.beginTransmission(0x08);
+          Wire.write(0x71);
+          Wire.endTransmission();
+//          bool startupcheck = automode.homing(incomingEncoderX, counter, startupX, startupY);
+
+//          if(startupcheck = true){
+            start = false;
+//          }
+//      }
+      }
+
+    }
+    }
+    else{
+    geefCoords();
+   
+    state = button.getState();
+    state2 = noodstop.getState();
+    state3 = modus.getState();
+
+    Receive();
+
+    ButtonState currentState = Default;
+
+    if (state2 == LOW && previousState2 == HIGH && noodstopPressed == false) {
+        currentState = Noodstop;
+    } else if (state2 == LOW && state3 == LOW && noodstopPressed == true) {
+        currentState = NoodstopReleased;
+    } else if (state == HIGH && previousState == LOW && noodstopPressed == false) {
+        currentState = AanUit;
+    } else if (state3 == LOW && previousState3 == HIGH && state2 == HIGH && noodstopPressed == false && werkenPressed == true) {
+        currentState = Modus;
+    } else {
+        currentState = Default;
+    }
+
+    switch (currentState){
+        case Noodstop:
+            noodstopPressed = true;
+            green = !green;
+//            Serial.print(": Noodstop pressed");
+            noodstopState = !noodstopState;
+            Connection();
+            setColor(255,0,0);
+//            Serial.print(": ACTIVATED");
+            Serial.write('c');
+            Serial.write(3);
+            
+            break;
+        case NoodstopReleased:
+            noodstopPressed = false;
+            modusState = false;
+            green = false;
+//            Serial.print(": Noodstop released");
+            noodstopState = !noodstopState;
+            Connection();
+            setColor(235,129,0);
+//            Serial.print(": RELEASED");
+            Serial.write('c');
+            Serial.write(2);
+            break;
+        case AanUit:
+            werken = !werken;
+            werkenPressed = !werkenPressed;
+//            Serial.print(": AAN/UIT pressed ");
+            if (werkenPressed == true)
+            {
+//                Serial.print(": SYSTEEM AAN");
+            }else{
+//                Serial.print(": SYSTEEM UIT");
+            }
+            Connection();
+            if (green == true && werkenPressed == true) {
+                setColor(0,255,0);
+                Serial.write('c');
+                Serial.write(1);
+            } else if (green == false && werkenPressed == true) {
+                setColor(235,129,0);
+                Serial.write('c');
+                Serial.write(2);
+            }else if (werkenPressed == false) {
+                setColor(0,0,0);
+                Serial.write('c');
+                Serial.write(4);
+            }
+            break;
+        case Modus:
+//            Serial.print(": Modus changed"); 
+            modusState = !modusState;  
+            if (green == false) {
+                setColor(0,255,0);
+                Serial.write('c');
+                Serial.write(1);
+            }else{
+                setColor(235,129,0);
+                Serial.write('c');
+                Serial.write(2);
+            }
+            green = !green;
+            Connection();
+            break;
+        case Default:
+            break;
+
+    }
+          
+    previousState = state;
+    previousState2 = state2;
+    previousState3 = state3;
+
+   if(noodstopPressed == HIGH || werkenPressed == false){
+//    Serial.println("Noodstop ingedrukt");
+//    Wire.beginTransmission(0x08);
+//    Wire.write(0xa1);
+//    Wire.endTransmission();
+    Wire.beginTransmission(0x08);
+    Wire.write(0x11);
+    Wire.endTransmission();
+    motorA.stop();
+    joystick.manualMove(HIGH);
+   } else if((werkenPressed == true && noodstopPressed == false && modusState == true) || werken == true){
+    joystick.manualMove(LOW);
+   } else if ((modusState == false && noodstopPressed == false) || Auto == true){
+    automode.autoMove(incomingEncoderX, counter, incomingX, incomingY);
+   } else if (werkenPressed == false || modusState == true){
+        motorA.stop();
+    }
+  
+    }
+
+}
+
+
+void checkConnection() {
+    unsigned long currentTime = millis();
+
+    if (currentTime - lastPingTime >= PING_INTERVAL) {
+        Serial.write('P');
+
+        waitingForPong = true;
+    }
+    while (Serial.available() > 0) {
+
+        if (Serial.read() == 0) {
+                noodstopPressed = false;
+       green = !green;
+           noodstopState = !noodstopState;
+           Connection();
+           setColor(235,129,0);
+        lastPingTime = currentTime;
+            waitingForPong = false; 
+            return;
+        }
+    }
+
+    if (waitingForPong && currentTime - lastPingTime >= PING_TIMEOUT) {
+        Serial.println("Noodstop"); 
+              noodstopPressed = true;
+       green = !green;
+//            Serial.print(": Noodstop pressed");
+           noodstopState = !noodstopState;
+           Connection();
+           setColor(255,0,0);
+        waitingForPong = false; 
+      
+    }
+}
+
 void setColor(int redValue, int greenValue, int blueValue)
 {
     digitalWrite(redPin, redValue);
     digitalWrite(greenPin, greenValue);
 }
 
-void loop()
-{   
-
-    // motorA.read();
-    // Get the state of the button
-    state = button.getState();
-    state2 = noodstop.getState();
-    state3 = modus.getState();
-    // Check if the button is pressed
-    if (state == HIGH && previousState == LOW && noodstopPressed == false) {
-        // Print a message
-        Serial.print(": AAN/UIT pressed ");
-        werken = !werken;
-        werkenPressed = !werkenPressed;
-        Connection();
-        // setColor(0,0,0);
-        // werkenPressed = !werkenPressed;
-        if (green == true && werkenPressed == true) {
-            setColor(0,255,0);
-        }if (green == false && werkenPressed == true) {
-            setColor(235,129,0);
-        }if (werkenPressed == false) {
-            setColor(0,0,0);
-        }
-
-        if (werkenPressed == true)
-        {
-            Serial.print(": SYSTEEM AAN");
-        }else{
-            Serial.print(": SYSTEEM UIT");
-        }
-    }
-
-    if (state2 == LOW && previousState2 == HIGH && noodstopPressed == false) {
-        // Print a message
-        noodstopPressed = true;
-        Serial.print(": Noodstop pressed");
-        noodstopState = !noodstopState;
-        Connection();
-        setColor(255,0,0);
-        // noodstopPressed = true;
-        if (noodstopPressed == true)
-        {
-            Serial.print(": ACTIVATED");
-        }
-    }
-
-    if (state2 == LOW && state3 == LOW  && noodstopPressed == true) {
-        // Print a message
-        noodstopPressed = false;
-        Serial.print(": Noodstop released");
-        noodstopState = !noodstopState;
-        Connection();
-        setColor(235,129,0);
-        // noodstopPressed = false;
-        if (noodstopPressed == false)
-        {
-            Serial.print(": RELEASED");
-        }
-        
-    }
-
-    if (state3 == LOW && previousState3 == HIGH && state2 == HIGH && noodstopPressed == false && werkenPressed == true) {
-        Serial.print(": Modus changed");        
-        if (green == false) {
-            modusState = !modusState;
-            setColor(0,255,0);
-        }if (green == true) {
-            modusState = !modusState;
-            setColor(235,129,0);
-        }
-        if (green == false) {
-            green = true;
-        }else{
-            green = false;
-        }
-    }           
-    
-    // Update the previous state
-    previousState = state;
-    previousState2 = state2;
-    previousState3 = state3;
-    //Serial.println(werken);
-   
-    // Set manual move on or off
-    if (werkenPressed == true && noodstopPressed == false) { // LOW is dat ie wel mag bewegen
-        joystick.manualMove(LOW);
-    }
-    if (werkenPressed == false)
-    {
-        motorA.stop();
-    }
-    if (noodstopPressed == HIGH)
-    {
-        motorA.stop();
-    } 
-    if (modusState == false && green == false && noodstopPressed == false)
-    {
-        joystick.manualMove(HIGH);
-        automode.autoMove();
-    }
-       
-}
 void Connection()
 {
-    // Send the data to the Slave
-    if (werkenPressed == true && noodstopPressed == false)
-    {
-        Serial.print(": Sending AAN");
-        Wire.beginTransmission(0x08);
-        Wire.write(0xa1);
-        Wire.endTransmission();
-    }
-    if (werkenPressed == false)
-    {
-        Serial.print(": Sending UIT");
-        Wire.beginTransmission(0x08);
-        Wire.write(0x02);
-        Wire.endTransmission();
-    }
-    if (noodstopPressed == true)
-    {
-        Serial.print(": Sending ACTIVATED");
-        Wire.beginTransmission(0x08);
-        Wire.write(0x02);
-        Wire.endTransmission();
-    }
-    if (noodstopPressed == false && werkenPressed == true)
-    {
-        Serial.print(": Sending RELEASED");
-        Wire.beginTransmission(0x08);
-        Wire.write(0xa1);
-        Wire.endTransmission();
+    
+if (noodstopPressed == true) {
+//    Serial.print(": Sending ACTIVATED");
+    Wire.beginTransmission(0x08);
+    Wire.write(0x02);
+    Wire.endTransmission();
+} else if (werkenPressed == false) {
+//    Serial.print(": Sending UIT");
+    Wire.beginTransmission(0x08);
+    Wire.write(0x02);
+    Wire.endTransmission();
+} else if (modusState == true) {
+//    Serial.print(": Sending AAN");
+    Wire.beginTransmission(0x08);
+    Wire.write(0xa1);
+    Wire.endTransmission();
+} else if (modusState == false) {
+//    Serial.print(": Sending UIT");
+    Wire.beginTransmission(0x08);
+    Wire.write(0x02);
+    Wire.endTransmission();
+} else if (noodstopPressed == false && werkenPressed == true) {
+//    Serial.print(": Sending RELEASED");
+    Wire.beginTransmission(0x08);
+    Wire.write(0xa1);
+    Wire.endTransmission();
+}
+}
+
+void Receive(){
+    Wire.requestFrom(0x08, 3);
+    while (Wire.available()) {
+        
+        int regId = Wire.read(); // byte 1
+        int highByte = Wire.read(); // byte 2
+        int lowByte = Wire.read(); // byte 3
+        int data = (highByte << 8) | lowByte;
+        
+        switch (regId) {
+            case 10:
+                incomingEncoderX = data;
+                
+                sensorY = false;
+                sensorX = true;
+//                Serial.println(incomingEncoderX);
+                break;
+            case 20:
+                int incomingMessage = data;
+                if (incomingMessage == 0)
+                { 
+                    sensorY = true;
+                    sensorX = false;
+                }
+                break;
+            default:
+                // Serial.println("Unknown regId: " + String(regId));
+                sensorX = false;
+                break;
+        }
+        berekenVerschil(incomingEncoderX, counter);
     }
 }
+
+void berekenVerschil(int nieuweX, int nieuweY){
+  if(oudeX < nieuweX){
+    beweegCounter += (nieuweX - oudeX);
+  }
+  else if(oudeX > nieuweX){
+    beweegCounter += (oudeX - nieuweX);
+  }
+  checkBeweegCounter();
+  
+  if(oudeY < nieuweY){
+    beweegCounter += (nieuweY - oudeY);
+  }
+  else if(oudeY > nieuweY){
+    beweegCounter += (oudeY - nieuweY);
+  }
+  checkBeweegCounter();
+}
+
+void checkBeweegCounter(){
+  int Xmap = map(incomingEncoderX, 0, 5850, 0, 255);
+  int Ymap = map(counter, 0, 5000, 0, 255);
+  if(beweegCounter >= 1000){
+    beweegCounter = 0;
+    if (incomingEncoderX < 5800) {
+      Serial.write('a');
+      Serial.write(Xmap);
+      Serial.write(Ymap);
+    }
+//    Serial.println("X is: ");
+//    Serial.println(Xmap);
+//    Serial.println("X is: ");
+//    Serial.println(incomingEncoderX);
+  }
+}
+
+void geefCoords(){
+  if(veranderCoords){
+    if(Serial.available()> 0){
+     if(Serial.read() == 9){
+       noodstopPressed = true;
+       green = !green;
+//            Serial.print(": Noodstop pressed");
+           noodstopState = !noodstopState;
+           Connection();
+           setColor(255,0,0);
+//            Serial.print(": ACTIVATED");
+           Serial.write('c');
+           Serial.write(3);
+     }
+     else if(Serial.read() == 8){
+       noodstopPressed = false;
+           modusState = false;
+           green = false;
+           noodstopState = !noodstopState;
+           Connection();
+           setColor(235,129,0);
+           Serial.write('c');
+           Serial.write(2);
+     }
+     else if(changeX){
+          incomingX = Serial.read();
+          changeX = false;
+          changeY = true;
+      }
+      else{
+          if(changeY){
+          incomingY = Serial.read();
+          changeY = false;
+          changeX = true;
+          automode.changeConfirmTrue();
+          automode.setfase();
+//        veranderCoords = false;
+        }
+      }
+//      }
+    
+      
+   
+//     incomingX = Serial.read();
+//     incomingY = Serial.read();
+//     Serial.println("X is: ");
+//     Serial.println(incomingX);
+//     incomingY = Serial.read();
+    }
+  }
+}
+
+
 
 void handleEncoder() {
   int clkState = digitalRead(CLK_PIN);
@@ -217,41 +459,14 @@ void handleEncoder() {
       counter--;
     }
   }
-  lastClkState = clkState;
-  Serial.println(counter);
+
+if (sensorY == true)
+  {
+    counter = 0;
+  }
+
+lastClkState = clkState;
+  
+//Serial.println(counter);
 
 }
-
-
-
-void JSCReceive(){
-    //receive a signal from the Jserialcomm protocol from JAVA
-
-    if (Serial.available() > 0) {    
-        byte incomingByte = 0;
-    incomingByte = Serial.read(); // read the incoming byte:
-    if (incomingByte != -1) {
-        if (incomingByte == 0xa1) {
-            werken = true;
-        }
-        Connection();
-    }
-    }
-}
-
-    void JSCSend(){
-    //send a signal from the Jserialcomm protocol from JAVA
-    if (werken == false)
-    {
-        Serial.write("Handmatig");
-    }
-    else if (werken == true)
-    {
-        Serial.write("Automatish");
-
-
-
-
-    }
-}
-
