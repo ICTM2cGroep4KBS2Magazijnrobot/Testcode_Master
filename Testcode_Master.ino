@@ -243,7 +243,7 @@ void loop()
    } else if((werkenPressed == true && noodstopPressed == false && modusState == true) || werken == true){
     joystick.manualMove(LOW);
    } else if ((modusState == false && noodstopPressed == false) || Auto == true){
-    automode.autoMove(incomingEncoderX, counter, incomingX, incomingY);
+   // automode.autoMove(incomingEncoderX, counter, incomingX, incomingY);
    } else if (werkenPressed == false || modusState == true){
         motorA.stop();
     }
@@ -428,8 +428,8 @@ void geefCoords(){
           incomingY = Serial.read();
           changeY = false;
           changeX = true;
-          automode.changeConfirmTrue();
-          automode.setfase();
+      //    automode.changeConfirmTrue();
+    //      automode.setfase();
 //        veranderCoords = false;
         }
       }
